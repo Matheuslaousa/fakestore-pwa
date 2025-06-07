@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Container,
   Typography,
@@ -7,28 +7,49 @@ import {
   CardMedia,
   Grid,
   Button,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useCart } from "../contexts/CartContext";
+import { useNavigate } from "react-router-dom";
 
 const CartPage: React.FC = () => {
-  const { cartItems, removeFromCart, clearCart } = useCart();
+  const { cart, removeFromCart, clearCart } = useCart();
+  const navigate = useNavigate();
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const total = cartItems.reduce(
+  const total = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+
+  const handleFinalizePurchase = () => {
+    setOpenSnackbar(true);
+  };
+
+  const handleSnackbarClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
+    clearCart();
+    navigate("/products");
+  };
 
   return (
     <Container sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
         Carrinho de Compras
       </Typography>
-      {cartItems.length === 0 ? (
+      {cart.length === 0 ? (
         <Typography variant="h6">Seu carrinho está vazio.</Typography>
       ) : (
         <>
           <Grid container spacing={3}>
-            {cartItems.map((item) => (
+            {cart.map((item) => (
               <Grid item xs={12} sm={6} md={4} key={item.id}>
                 <Card>
                   <CardMedia
@@ -64,11 +85,25 @@ const CartPage: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={clearCart}
+            onClick={handleFinalizePurchase}
             sx={{ mt: 2 }}
           >
             Finalizar Compra
           </Button>
+          <Snackbar
+            open={openSnackbar}
+            autoHideDuration={3000}
+            onClose={handleSnackbarClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          >
+            <Alert
+              onClose={handleSnackbarClose}
+              severity="success"
+              sx={{ width: "100%" }}
+            >
+              Compra finalizada com sucesso!
+            </Alert>
+          </Snackbar>
         </>
       )}
     </Container>

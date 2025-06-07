@@ -84,7 +84,14 @@ const ProductDetails: React.FC = () => {
           <Button
             variant="contained"
             sx={{ mt: 2 }}
-            onClick={() => addToCart(product)}
+            onClick={() =>
+              addToCart({
+                id: product.id,
+                title: product.title,
+                price: product.price,
+                quantity: 1, // necessário para funcionar corretamente
+              })
+            }
           >
             Adicionar ao carrinho
           </Button>
