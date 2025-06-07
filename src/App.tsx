@@ -1,41 +1,59 @@
-import React, { useEffect, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import ProductsPage from './pages/ProductsPage';
-import ProductDetails from './pages/ProductDetails';
-import ProtectedRoute from './components/ProtectedRoute';
-import { Alert } from '@mui/material';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+import Home from "./pages/Home";
+import Products from "./pages/Products";
+import ProductDetails from "./pages/ProductDetails";
+import CartPage from "./pages/CartPage";
+import Login from "./pages/Login";
+import CartIcon from "./contexts/CartIcon"; // corrigido
+import { CartProvider } from "./contexts/CartContext";
 
-const App: React.FC = () => {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+function AppRoutes() {
+  const location = useLocation();
+  const showCart =
+    location.pathname.startsWith("/products") && location.pathname !== "/cart";
 
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+  const token = localStorage.getItem("token");
 
   return (
-    <>
-      {!isOnline && <Alert severity="warning">Você está offline.</Alert>}
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/produtos" element={
-          <ProtectedRoute>
-            <ProductsPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/produtos/:id" element={<ProductDetails />} />
-      </Routes>
-    </>
+    <CartProvider>
+      <>
+        {showCart && <CartIcon />}
+        <Routes>
+          {!token && (
+            <>
+              <Route path="/login" element={<Login />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </>
+          )}
+          {token && (
+            <>
+              <Route path="/" element={<Navigate to="/products" replace />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/products/:id" element={<ProductDetails />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route
+                path="/login"
+                element={<Navigate to="/products" replace />}
+              />
+              <Route path="*" element={<Navigate to="/products" replace />} />
+            </>
+          )}
+        </Routes>
+      </>
+    </CartProvider>
   );
-};
+}
+
+const App = () => (
+  <Router>
+    <AppRoutes />
+  </Router>
+);
 
 export default App;
